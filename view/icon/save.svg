@@ -1,0 +1,19 @@
+<svg height="100" version="1.1" width="100" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<clipPath id="clip">
+			<path d="
+				M 50 100
+				L 50 90
+				A 100 100 0 0 0 0 70
+				A 100 100 0 0 1 50 100
+				Z
+				M 50 100
+				L 50 90
+				A 100 100 0 0 1 100 0
+				A 80 80 0 0 0 50 100
+				Z
+			" />
+		</clipPath>
+	</defs>
+	<rect clip-path="url(#clip)" fill="white" height="100%" width="100%" />
+</svg>

@@ -1,0 +1,14 @@
+<svg height="100" version="1.1" width="100" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<clipPath id="clip">
+			<path d="
+				M 40 10 L 40 0 L 45 0 L 45 10 Z
+				M 42 0 L 60 0 L 60 5 L 42 5 Z
+				M 60 10 L 60 0 L 65 0 L 65 10 Z
+			" />
+			<rect height="10" x="10" y="10" width="80" />
+			<polygon points="10,25 20,100 80,100 90,25" />
+		</clipPath>
+	</defs>
+	<rect clip-path="url(#clip)" fill="white" height="100%" width="100%" />
+</svg>
