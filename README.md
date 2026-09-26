@@ -1,6 +1,6 @@
 Note: Bug fixes in progress
 
-(a) A book keeping application with:
+A book keeping application with:
 
   (i) Authentication system
 
@@ -16,7 +16,7 @@ Note: Bug fixes in progress
 
   (vii) Cookie-less support
 
-(b) How to Run:
+How to Run:
 
   (i) Set the ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
 
