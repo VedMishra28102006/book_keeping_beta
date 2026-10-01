@@ -31,16 +31,27 @@ let add_row = () => {
 	if (user_status == "locked" || (audition && uid != audition)) {
 		return;
 	}
-	journal_rows.insertAdjacentHTML("beforeend", journal_row());
-	let focused = journal_rows.children[journal_rows.children.length-1].children[0];
-	let rowlabel = `Row: ${journal_rows.children.length-1}`;
+	if (focused) {
+		focused.parentNode.insertAdjacentHTML("afterend", journal_row());
+		focused = focused.parentNode.nextElementSibling.children[0];
+	} else {
+		journal_rows.insertAdjacentHTML("beforeend", journal_row());
+		focused = journal_rows.children[journal_rows.children.length-1].children[0];
+	}
+	refresh_rows();
+	let rowlabel = focused.parentNode.getAttribute("aria-label");
 	document.getElementById("journal_action_msg").textContent = `New ${rowlabel} has been added`;
-	journal_rows.children[journal_rows.children.length-1].scrollIntoView({
+	focused.parentNode.scrollIntoView({
 		behavior: "smooth",
 		block: "center"
 	});
 	focused.children[1].focus();
 	
+};
+let refresh_rows = () => {
+		for (let i=0; i < journal_rows.children.length; i++) {
+			journal_rows.children[i].setAttribute("aria-label", `Row: ${i}`);
+		}
 };
 let delete_row = () => {
 	if (focused) {
@@ -55,9 +66,7 @@ let delete_row = () => {
 			
 		}
 		focused = null;
-		for (let i=0; i < journal_rows.children.length; i++) {
-			journal_rows.children[i].setAttribute("aria-label", `Row: ${i}`);
-		}
+		refresh_rows();
 		if (focused) {
 			focused.children[1].focus();
 		}
