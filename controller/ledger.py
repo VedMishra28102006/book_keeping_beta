@@ -9,14 +9,14 @@ def prepare_ledger(account, fy_id, user_id, download):
 		cursor = db.cursor()
 		cursor.row_factory = sqlite3.Row
 		balance = 0
-		cursor.execute("SELECT journal_id,journal_date,journal_ac_credited AS account,journal_amount FROM journal_fake WHERE journal_ac_debited=? AND fy_id=? AND user_id=?", (account, fy_id, user_id))
+		cursor.execute("SELECT journal_entry_id,journal_date,journal_ac_credited AS account,journal_amount FROM journal_fake WHERE journal_ac_debited=? AND fy_id=? AND user_id=?", (account, fy_id, user_id))
 		debit_side = cursor.fetchall()
 		debit_total = 0
 		if debit_side:
 			debit_side = [dict(row) for row in debit_side]
 			debit_total = sum([row["journal_amount"] for row in debit_side])
 			balance += debit_total
-		cursor.execute(f"SELECT journal_id,journal_date,journal_ac_debited AS account,journal_amount FROM journal_fake WHERE journal_ac_credited=? AND fy_id=? AND user_id=?", (account, fy_id, user_id))
+		cursor.execute(f"SELECT journal_entry_id,journal_date,journal_ac_debited AS account,journal_amount FROM journal_fake WHERE journal_ac_credited=? AND fy_id=? AND user_id=?", (account, fy_id, user_id))
 		credit_side = cursor.fetchall()
 		credit_total = 0
 		if credit_side:
@@ -24,7 +24,7 @@ def prepare_ledger(account, fy_id, user_id, download):
 			credit_total = sum([row["journal_amount"] for row in credit_side])
 			balance -= credit_total
 		if not debit_side and not credit_side:
-			return jsonify({"error": "Invalid account"}), 400
+			return {"error": "Invalid account"}
 		balance_side = None
 		if balance > 0:
 			balance_side = "credit_side"
@@ -40,7 +40,7 @@ def prepare_ledger(account, fy_id, user_id, download):
 		balance = abs(balance)
 		if download:
 			cursor.execute("SELECT fy_name FROM fy WHERE fy_id=? AND user_id=?", (fy_id, user_id))
-			fy_name = cursor.fetchone()["name"]
+			fy_name = cursor.fetchone()["fy_name"]
 			csv = "Dr,,,,,Cr\r\nDate,Particulars,Amount,Date,Particulars,Amount\r\n"
 			for i in range(max(len(debit_side), len(credit_side))):
 				csv += f"{'' if i >= len(debit_side) else debit_side[i]['journal_date']},{'' if i >= len(debit_side) else debit_side[i]['account']},{'' if i >= len(debit_side) else debit_side[i]['journal_amount']},{'' if i >= len(credit_side) else credit_side[i]['journal_date']},{'' if i >= len(credit_side) else credit_side[i]['account']},{'' if i >= len(credit_side) else credit_side[i]['journal_amount']}\r\n"
@@ -60,7 +60,7 @@ def prepare_ledger(account, fy_id, user_id, download):
 				"total": total
 			}
 
-def prepare_all_ledgers(ledger_q, fy_id, user_id, download):
+def prepare_all_ledgers(fy_id, user_id, download):
 	with sqlite3.connect("data.db") as db:
 		cursor = db.cursor()
 		cursor.row_factory = sqlite3.Row
@@ -101,7 +101,7 @@ def prepare_all_ledgers(ledger_q, fy_id, user_id, download):
 					result = prepare_ledger(rows[i].get("account"), fy_id, user_id, download)
 					zip_file.writestr(result.get("name"), result.get("content"))
 			zip_buffer.seek(0)
-			cursor.execute("SELECT fy_name FROM fy WHERE id=? AND user_id=?", (fy_id, user_id))
+			cursor.execute("SELECT fy_name FROM fy WHERE fy_id=? AND user_id=?", (fy_id, user_id))
 			fy_name = cursor.fetchone()["fy_name"]
 			return {
 				"content": zip_buffer.read(),
@@ -122,9 +122,8 @@ def ledger_index(user_token, user_id, fy_id):
 	if request.method == "GET":
 		account = request.args.get("account")
 		download = request.args.get("download")
-		ledger_q = request.args.get("ledger_q")
 		if not account:
-			result = prepare_all_ledgers(ledger_q, fy_id, user_id, download)
+			result = prepare_all_ledgers(fy_id, user_id, download)
 			if isinstance(result, dict) and result.get("zip"):
 				return Response (
 					result.get("content"),

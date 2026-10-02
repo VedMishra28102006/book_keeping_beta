@@ -17,7 +17,7 @@ def prepare_journal(fy_id, user_id, download):
 			total = cursor.fetchone()
 			total = total[0] if total and total[0] is not None else 0
 		if download:
-			cursor.execute("SELECT fy_name FROM fy WHERE id=? AND user_id=?", (fy_id, user_id))
+			cursor.execute("SELECT fy_name FROM fy WHERE fy_id=? AND user_id=?", (fy_id, user_id))
 			fy_name = cursor.fetchone()["fy_name"]
 			csv = "Date,Particulars,Debit,Credit\r\n"
 			for row in rows:

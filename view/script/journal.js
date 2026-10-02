@@ -2,7 +2,7 @@ let journal = document.getElementById("journal");
 let journal_form = document.getElementById("journal_form");
 let status = null;
 let journal_row = (row) => {
-	return `<div aria-label="Row: ${(row) ? row.journal_entry_id : journal_rows.children.length}" class="tr" id="${(row) ? `entry_${uid}_${fy_id}_${row.id}` : ''}" role="row">
+	return `<div aria-label="Journal Row: ${(row) ? row.journal_entry_id : journal_rows.children.length}" class="tr" id="${(row) ? `entry_${uid}_${fy_id}_${row.id}` : ''}" role="row">
 		<div class="td" role="cell">
 			<small aria-live="assertive" class="error" id="journal_date_${(row) ? row.journal_entry_id : journal_rows.children.length}_error"></small>
 			<input aria-describedby="journal_date_${(row) ? row.journal_entry_id : journal_rows.children.length}_error" aria-labelledby="journal_date_head" autocomplete="off" id="journal_date_${(row) ? row.journal_entry_id : journal_rows.children.length}" name="journal_date" onfocus="focused=this.parentNode" ${(status == "locked" || user_status == "locked" || (audition && uid != audition)) ? "readonly" : ""} type="date" value="${(row) ? row.journal_date : ''}">
@@ -17,7 +17,7 @@ let journal_row = (row) => {
 		</div>
 		<div class="td" role="cell">
 			<small aria-live="assertive" class="error" id="journal_amount_${(row) ? row.journal_entry_id : journal_rows.children.length}_error"></small>
-			<input aria-describedby="journal_amount_${(row) ? row.journal_entry_id : journal_rows.children.length}_error" aria-labelledby="journal_amount_head" autocomplete="off" id="journal_amount_${(row) ? row.journal_entry_id : journal_rows.children.length}" name="journal_amount" onfocus="focused=this.parentNode" oninput="update_total()" ${(status == "locked" || user_status == "locked" || (audition && uid != audition)) ? "readonly" : ""} type="number" value="${(row) ? row.journal_amount : ''}">
+			<input aria-describedby="journal_amount_${(row) ? row.journal_entry_id : journal_rows.children.length}_error" aria-labelledby="journal_amount_head" autocomplete="off" id="journal_amount_${(row) ? row.journal_entry_id : journal_rows.children.length}" name="journal_amount" onfocus="focused=this.parentNode" oninput="update_total()" ${(status == "locked" || user_status == "locked" || (audition && uid != audition)) ? "readonly" : ""} oninput="update_total()" type="number" value="${(row) ? row.journal_amount : ''}">
 		</div>
 		<div class="td" role="cell">
 			<small aria-live="assertive" class="error" id="journal_description_${(row) ? row.journal_entry_id : journal_rows.children.length}_error"></small>
@@ -50,7 +50,7 @@ let add_row = () => {
 };
 let refresh_rows = () => {
 		for (let i=0; i < journal_rows.children.length; i++) {
-			journal_rows.children[i].setAttribute("aria-label", `Row: ${i}`);
+			journal_rows.children[i].setAttribute("aria-label", `Journal Row: ${i}`);
 		}
 };
 let delete_row = () => {
@@ -91,9 +91,7 @@ let fetch_journal = (id) => {
 				<div class="td" role="cell"><span></span></div>
 			</div>`;
 			fetch_ledger_menu();
-			if (ledger_table.getAttribute('account')) {
-				fetch_ledger_account(ledger_table.getAttribute('account'));
-			}
+			ledger_account.querySelector(".account").textContent = "";
 			fetch_bs();
 			fetch_tb();
 		}
@@ -131,8 +129,7 @@ let submit_journal = () => { return new Promise((resolve, reject) => {
 			if (data.error) data = [data];
 			for (d of data) {
 				let field = journal_form.querySelectorAll(`input[name="${d.field}"]`)[d.index];
-				field.previousElementSibling.style.opacity = "1.0";
-				field.previousElementSibling.style.visibility = "visible";
+				field.previousElementSibling.classList.add("on");
 				field.previousElementSibling.innerText = d.error;
 				errorVisible.push(d);
 			}
@@ -142,9 +139,6 @@ let submit_journal = () => { return new Promise((resolve, reject) => {
 				journal_rows.children[i].setAttribute("id", `entry_${uid}_${journal_form.getAttribute("fy_id")}_${i}`);
 			}
 			fetch_ledger_menu();
-			if (ledger_table.getAttribute('account')) {
-				fetch_ledger_account(ledger_table.getAttribute('account'));
-			}
 			fetch_bs();
 			fetch_tb();
 			alert("saved");
@@ -165,8 +159,9 @@ let import_journal = async () => {
 	if (!file) return;
 	let csv = await file.text();
 	journal_rows.innerHTML = "";
-	rows = csv.split("\r\n");
+	let rows = csv.split(/\r?\n/).filter(line => line.trim() !== "");
 	for (let i=1; i < rows.length-1; i += 3) {
+		if (!rows[i] || !rows[i + 1] || !rows[i + 2]) break;
 		let row1 = rows[i].split(",");
 		let row2 = rows[i+1].split(",");
 		let row3 = rows[i+2].split(",");
@@ -186,6 +181,8 @@ let import_journal = async () => {
 			<div aria-label="Cell: Empty" class="td"><span></span></div>
 		</div>`;
 	}
+	update_total();
+	document.getElementById("journal_action_msg").textContent = `Journal ${file.name} has been imported`;
 };
 let export_journal = async () => {
 	let submission = (status == "locked" || user_status == "locked" || (audition && uid != audition)) ? "skip" : await submit_journal();
@@ -202,22 +199,5 @@ let update_total = () => {
 			total += parseFloat(amount.value);
 		}
 	}
-	document.getElementById("total_amount").innerText = `${total}`;
-};
-let refer_journal = (id) => {
-	if (!id) { return; }
-	window.location.href = "#journal";
-	let record = document.getElementById(`entry_${uid}_${fy_id}_${id}`);
-	record.scrollIntoView({
-		behavior: "smooth",
-		block: "center"
-	});
-	for (let row of record.children) {
-		row.style.backgroundColor = "rgb(50, 50, 50)";
-	}
-	setTimeout(() => {
-		for (let row of record.children) {
-			row.style.backgroundColor = "rgb(30, 30, 30)";
-		}
-	}, 500);
+	document.getElementById("total_amount").value = `${total}`;
 };

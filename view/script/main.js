@@ -95,8 +95,7 @@ document.addEventListener("click", (event) => {
 	if (errorVisible) {
 		for (let e of errorVisible) {
 			let field = errorTable.querySelectorAll(`input[name="${e.field}"]`)[e.index];
-			field.previousElementSibling.style.opacity = "0.0";
-			field.previousElementSibling.style.visibility = "hidden";
+			field.previousElementSibling.classList.remove("on");
 			setTimeout(() => {
 					field.previousElementSibling.innerText = "";
 			}, 1000);

@@ -340,6 +340,10 @@ dialog.options_wrapper {
 	position: absolute;
 	top: 100%;
 }
+.table > .tbody > .tr > .td > .error.on {
+	opacity: 1.0;
+	visibility: visible;
+}
 .table > .thead > .tr {
 	background-color: #4471da;
 	display: grid;

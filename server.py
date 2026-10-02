@@ -19,22 +19,15 @@ with sqlite3.connect("data.db") as db:
 			db.executescript(m.read())
 
 with server.app_context():
-	from controller.main import main
-	server.register_blueprint(main)
-	from controller.auth import auth
-	server.register_blueprint(auth)
-	from controller.fy import fy
-	server.register_blueprint(fy)
-	from controller.admin import admin
-	server.register_blueprint(admin)
-	from controller.journal import journal
-	server.register_blueprint(journal)
-	from controller.ledger import ledger
-	server.register_blueprint(ledger)
-	from controller.bs import bs
-	server.register_blueprint(bs)
-	from controller.tb import tb
-	server.register_blueprint(tb)
+	import controller
+	server.register_blueprint(controller.main)
+	server.register_blueprint(controller.auth)
+	server.register_blueprint(controller.fy)
+	server.register_blueprint(controller.admin)
+	server.register_blueprint(controller.journal)
+	server.register_blueprint(controller.ledger)
+	server.register_blueprint(controller.bs)
+	server.register_blueprint(controller.tb)
 
 @server.route("/", methods=["GET"])
 def server_index():
